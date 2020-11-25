@@ -10,6 +10,10 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"})
+@NamedQuery(
+        name ="Member.findByUsername", //아무거나 해도 되는데 관례상 entity명.메서드명 줌
+        query = "select m from Member m where m.username = :username"
+)
 public class Member {
 
     @Id @GeneratedValue
@@ -45,6 +49,11 @@ public class Member {
         if (team != null) {
             this.team = team;
         }
+    }
+
+    public Member(String username, int age) {
+        this.username = username;
+        this.age = age;
     }
 
     /**
