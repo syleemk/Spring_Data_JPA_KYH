@@ -8,6 +8,7 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.entity.Member;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -22,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class MemberJpaRepositoryTest {
 
     @Autowired MemberJpaRepository memberJpaRepository;
+    @Autowired
+    EntityManager em;
 
     @Test
     public void testMember() throws Exception {
@@ -127,5 +130,26 @@ class MemberJpaRepositoryTest {
         //then
         assertThat(members.size()).isEqualTo(3);
         assertThat(totalCount).isEqualTo(5);
+    }
+
+    @Test
+    public void bulkUpdate() throws Exception {
+        //given
+        memberJpaRepository.save(new Member("member1", 10));
+        memberJpaRepository.save(new Member("member2", 19));
+        memberJpaRepository.save(new Member("member3", 20));
+        memberJpaRepository.save(new Member("member4", 21));
+        memberJpaRepository.save(new Member("member5", 40));
+
+        //when
+        //벌크연산 수행
+        int resultCount = memberJpaRepository.bulkAgePlus(20);
+        //혹시 모를 남아있는 변경사항 반영
+        em.flush();
+        //영속성 컨텍스트 비우기
+        em.clear();
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
     }
 }

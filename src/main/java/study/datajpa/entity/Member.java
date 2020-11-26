@@ -14,6 +14,7 @@ import javax.persistence.*;
         name ="Member.findByUsername", //아무거나 해도 되는데 관례상 entity명.메서드명 줌
         query = "select m from Member m where m.username = :username"
 )
+@NamedEntityGraph(name = "Member.all", attributeNodes = @NamedAttributeNode("team"))
 public class Member {
 
     @Id @GeneratedValue

@@ -3,13 +3,13 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -87,4 +87,55 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "select m from Member m left join m.team t",
             countQuery = "select count(m.username) from Member m")
     Page<Member> findByAge(int age, Pageable pageable);
+
+    /**
+     * 벌크성 수정쿼리
+     * 벌크성 수정쿼리 수행 후에는 반드시 영속성 컨텍스트 clear해줘야함
+     */
+    @Modifying(clearAutomatically = true) //이게 있어야 executeUpdate실행 (아니면 getResultList 이런거 실행해버림)
+    @Query("update Member m set m.age = m.age + 1 where age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+    /**
+     * 페치 조인
+     * 매번 jpql 써야하나? 그러면 메서드 이름으로 쿼리생설할때는 어떡함?
+     * 스프링 데이터 jpa는 @EntityGraph로 페치조인 지원
+     */
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    /**
+     * jpql없이 fetch join
+     * @EntityGraph
+     */
+    @Override
+    @EntityGraph(attributePaths = ("team"))
+    List<Member> findAll();
+
+    /**
+     * jpql 짜고, 엔티티 그래프만 추가할 수도 있음
+     */
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    /**
+     * 메서드 이름으로 쿼리 생성할 때도 엔티티 그래프 사용 가능
+     */
+//    @EntityGraph(attributePaths = {"team"})
+    @EntityGraph("Member.all")
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+    /**
+     * 쿼리힌트 name과 value 둘다 문자열
+     * JPA가 Hibernate에게 넘길 수 있게 구멍을 열어둔 것임
+     */
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+    /**
+     * JPA에서 제공하는 Lock기능
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
