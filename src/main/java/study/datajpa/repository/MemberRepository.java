@@ -16,7 +16,7 @@ import java.util.Optional;
 
 //리포지토리 어노테이션 필요없음
 //JpaRepository상속한 인터페이스 JPA가 알아서 componet scan함
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     /**
      * 구현체 없이 인터페이스밖에 안만들었는데
